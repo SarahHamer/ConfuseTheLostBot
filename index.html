@@ -51,6 +51,7 @@ const cell = 60;
 let agent, goal, rewardTiles;
 let running = false;
 let lastPos = null; // store previous position to prevent ping-pong
+let goalReached = false; // tracks if agent reached goal
 
 // UI refs
 const goalRewardInput = document.getElementById("goalReward");
@@ -65,6 +66,7 @@ function reset() {
   rewardTiles = [{x: 2, y: 2}];
   running = false;
   lastPos = null;
+  goalReached = false;
   draw();
 }
 
@@ -102,7 +104,7 @@ function reward(x, y) {
   return r;
 }
 
-// recursive evaluation with lookahead
+// recursive evaluation with lookahead and visited set
 function evaluate(x, y, depth, visited=new Set()) {
   if (depth === 0) return 0;
 
@@ -123,16 +125,13 @@ function evaluate(x, y, depth, visited=new Set()) {
     if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
 
     const key = `${nx},${ny}`;
-    if (visited.has(key)) continue; // avoid cycling back in evaluation
+    if (visited.has(key)) continue; // prevent cycling in lookahead
 
     let dist = Math.abs(nx - obsGoal.x) + Math.abs(ny - obsGoal.y);
     let newVisited = new Set(visited);
     newVisited.add(key);
 
-    let score =
-      reward(nx, ny)
-      - dist * 0.5
-      + evaluate(nx, ny, depth - 1, newVisited);
+    let score = reward(nx, ny) - dist*0.5 + evaluate(nx, ny, depth - 1, newVisited);
 
     if (score > best) best = score;
   }
@@ -168,13 +167,28 @@ function bestMove() {
     }
   }
 
-  lastPos = agent; // store current position for next step
+  lastPos = {...agent}; // store current position
   return best;
 }
 
 function step() {
+  // If agent reached true goal and no nearby reward tiles and no fake goal, stay put
+  const onGoal = agent.x === goal.x && agent.y === goal.y;
+  const rewardTileHere = rewardTiles.some(t => t.x === agent.x && t.y === agent.y);
+
+  if (onGoal && !rewardTileHere && !fakeGoalInput.checked) {
+    draw();
+    return;
+  }
+
   let move = bestMove();
   if (move) agent = move;
+
+  // mark goal reached for optional logic (not strictly necessary)
+  if (!goalReached && agent.x === goal.x && agent.y === goal.y) {
+    goalReached = true;
+  }
+
   draw();
 }
 
