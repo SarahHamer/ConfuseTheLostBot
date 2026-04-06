@@ -26,7 +26,7 @@
   </label>
 
   <label>Step Penalty: <span id="spv">-0.1</span>
-    <input type="range" id="stepPenalty" min="-1" max="0" step="0.1" value="-0.1">
+    <input type="range" id="stepPenalty" min="-1" max="0" step="0.05" value="-0.1">
   </label>
 
   <label>
@@ -50,6 +50,7 @@ const cell = 60;
 
 let agent, goal, rewardTiles;
 let running = false;
+let lastPos = null; // store previous position to prevent ping-pong
 
 // UI refs
 const goalRewardInput = document.getElementById("goalReward");
@@ -63,6 +64,7 @@ function reset() {
   goal = {x: 5, y: 5};
   rewardTiles = [{x: 2, y: 2}];
   running = false;
+  lastPos = null;
   draw();
 }
 
@@ -100,8 +102,8 @@ function reward(x, y) {
   return r;
 }
 
-// simple greedy agent
-function evaluate(x, y, depth) {
+// recursive evaluation with lookahead
+function evaluate(x, y, depth, visited=new Set()) {
   if (depth === 0) return 0;
 
   const moves = [
@@ -120,12 +122,17 @@ function evaluate(x, y, depth) {
 
     if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
 
+    const key = `${nx},${ny}`;
+    if (visited.has(key)) continue; // avoid cycling back in evaluation
+
     let dist = Math.abs(nx - obsGoal.x) + Math.abs(ny - obsGoal.y);
+    let newVisited = new Set(visited);
+    newVisited.add(key);
 
     let score =
       reward(nx, ny)
       - dist * 0.5
-      + evaluate(nx, ny, depth - 1);
+      + evaluate(nx, ny, depth - 1, newVisited);
 
     if (score > best) best = score;
   }
@@ -150,7 +157,10 @@ function bestMove() {
 
     if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
 
-    let score = evaluate(nx, ny, 4); // 👈 depth here
+    // prevent immediate backtracking
+    if (lastPos && nx === lastPos.x && ny === lastPos.y) continue;
+
+    let score = evaluate(nx, ny, 4);
 
     if (score > bestScore) {
       bestScore = score;
@@ -158,6 +168,7 @@ function bestMove() {
     }
   }
 
+  lastPos = agent; // store current position for next step
   return best;
 }
 
