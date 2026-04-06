@@ -101,6 +101,38 @@ function reward(x, y) {
 }
 
 // simple greedy agent
+function evaluate(x, y, depth) {
+  if (depth === 0) return 0;
+
+  const moves = [
+    {dx:1, dy:0},
+    {dx:-1, dy:0},
+    {dx:0, dy:1},
+    {dx:0, dy:-1}
+  ];
+
+  const obsGoal = getObservation();
+  let best = -Infinity;
+
+  for (let m of moves) {
+    let nx = x + m.dx;
+    let ny = y + m.dy;
+
+    if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
+
+    let dist = Math.abs(nx - obsGoal.x) + Math.abs(ny - obsGoal.y);
+
+    let score =
+      reward(nx, ny)
+      - dist * 0.5
+      + evaluate(nx, ny, depth - 1);
+
+    if (score > best) best = score;
+  }
+
+  return best;
+}
+
 function bestMove() {
   const moves = [
     {dx:1, dy:0},
@@ -112,17 +144,13 @@ function bestMove() {
   let best = null;
   let bestScore = -Infinity;
 
-  const obsGoal = getObservation();
-
   for (let m of moves) {
     let nx = agent.x + m.dx;
     let ny = agent.y + m.dy;
 
     if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
 
-    // expected reward + heuristic toward observed goal
-    let dist = Math.abs(nx - obsGoal.x) + Math.abs(ny - obsGoal.y);
-    let score = reward(nx, ny) - dist;
+    let score = evaluate(nx, ny, 4); // 👈 depth here
 
     if (score > bestScore) {
       bestScore = score;
