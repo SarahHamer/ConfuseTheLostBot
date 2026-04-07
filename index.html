@@ -5,7 +5,7 @@
 <title>RL Attack Demo – Break the Robot</title>
 <style>
   body { font-family: Arial; display: flex; gap: 20px; }
-  canvas { border: 1px solid black; }
+  canvas { border: 1px solid black; cursor: pointer; }
   .panel { max-width: 250px; }
   label { display: block; margin-top: 10px; }
 </style>
@@ -41,6 +41,7 @@
   <button onclick="run()">Run</button>
   <button onclick="reset()">Reset</button>
 
+  <p>Click on grid cells to add/remove gold tiles (reward tiles)</p>
   <p id="info"></p>
 </div>
 
@@ -130,7 +131,7 @@ function evaluate(x, y, depth, visited=new Set()) {
     let newVisited = new Set(visited);
     newVisited.add(key);
 
-    // Dynamic reward-hacking: reward dominates when high
+    // Dynamic reward-hacking
     let score = reward(nx, ny) + evaluate(nx, ny, depth - 1, newVisited);
 
     if (score > best) best = score;
@@ -239,6 +240,23 @@ function draw() {
   document.getElementById("info").innerText =
     `Agent: (${agent.x}, ${agent.y})`;
 }
+
+// Click-to-place reward tiles
+document.getElementById("grid").addEventListener("click", e => {
+  const rect = e.target.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left)/cell);
+  const y = Math.floor((e.clientY - rect.top)/cell);
+
+  // toggle tile
+  const index = rewardTiles.findIndex(t => t.x === x && t.y === y);
+  if (index >= 0) {
+    rewardTiles.splice(index, 1); // remove
+  } else {
+    rewardTiles.push({x, y}); // add
+  }
+
+  draw();
+});
 
 // UI updates
 goalRewardInput.oninput = () => grv.innerText = goalRewardInput.value;
