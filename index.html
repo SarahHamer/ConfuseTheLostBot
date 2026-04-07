@@ -2,13 +2,45 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RL Attack Demo – Noise, Reward-Hacking & Trail</title>
+<title>RL Attack Demo – Hover Tooltips</title>
 <style>
   body { font-family: Arial; display: flex; gap: 20px; }
   canvas { border: 1px solid black; cursor: pointer; }
   .panel { max-width: 300px; }
-  label { display: block; margin-top: 10px; }
-  .desc { font-size: 0.85em; color: #555; margin-bottom: 5px; }
+  label { display: block; margin-top: 10px; position: relative; }
+  input, button { width: 100%; margin-top: 5px; }
+
+  /* Tooltip container */
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+
+  /* Tooltip text */
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 250px;
+    background-color: #333;
+    color: #fff;
+    text-align: left;
+    border-radius: 5px;
+    padding: 5px;
+    position: absolute;
+    z-index: 10;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 0.85em;
+    pointer-events: none;
+  }
+
+  /* Show tooltip on hover */
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
 </style>
 </head>
 <body>
@@ -16,51 +48,47 @@
 <canvas id="grid" width="360" height="360"></canvas>
 
 <div class="panel">
-  <h3>Controls & Explanations</h3>
+  <h3>Controls</h3>
 
-  <label>Goal Reward: <span id="grv">10</span>
+  <label class="tooltip">Goal Reward: <span id="grv">10</span>
     <input type="range" id="goalReward" min="0" max="20" value="10">
+    <span class="tooltiptext">Reward for reaching the true goal (green tile). Higher value encourages prioritizing the goal.</span>
   </label>
-  <div class="desc">
-    Reward for reaching the true goal (green tile). Higher value encourages the agent to prioritize the goal over other tiles.
-  </div>
 
-  <label>Tile Reward: <span id="trv">2</span>
+  <label class="tooltip">Tile Reward: <span id="trv">2</span>
     <input type="range" id="tileReward" min="0" max="10" value="2">
+    <span class="tooltiptext">Reward for gold tiles. Demonstrates reward hacking: high-reward tiles can lure the agent away from the true goal.</span>
   </label>
-  <div class="desc">
-    Reward for stepping on gold tiles. Demonstrates <b>reward hacking</b>—high rewards can lure the agent away from the true goal.
-  </div>
 
-  <label>Step Penalty: <span id="spv">-0.1</span>
+  <label class="tooltip">Step Penalty: <span id="spv">-0.1</span>
     <input type="range" id="stepPenalty" min="-1" max="0" step="0.05" value="-0.1">
+    <span class="tooltiptext">Small penalty per step. Encourages shorter paths and reduces looping.</span>
   </label>
-  <div class="desc">
-    Small penalty per step. Encourages shorter paths; can influence whether the agent loops or moves efficiently.
-  </div>
 
-  <label>
+  <label class="tooltip">
     <input type="checkbox" id="fakeGoal"> Fake Goal (Observation Attack)
+    <span class="tooltiptext">Introduces a false goal (blue outline). Demonstrates adversarial observation manipulation: the agent moves toward a perceived goal instead of the true goal.</span>
   </label>
-  <div class="desc">
-    Introduces a false goal (blue outline). Demonstrates <b>adversarial observation manipulation</b>—the agent will move toward a location it believes is the goal.
-  </div>
 
-  <label>Noise: <span id="nv">0</span>
+  <label class="tooltip">Noise: <span id="nv">0</span>
     <input type="range" id="noise" min="0" max="0.5" step="0.05" value="0">
+    <span class="tooltiptext">Randomly perturbs the agent's perceived goal. Higher noise increases unpredictability, simulating adversarial observation errors.</span>
   </label>
-  <div class="desc">
-    Randomly perturbs the agent's perceived goal. Higher noise increases unpredictability, simulating imperfect or adversarial observations.
-  </div>
 
-  <button onclick="step()">Step</button>
-  <div class="desc">Advances the agent by one step toward its current prioritized tile.</div>
+  <label class="tooltip">
+    <button onclick="step()">Step</button>
+    <span class="tooltiptext">Advance the agent one step toward its current prioritized tile.</span>
+  </label>
 
-  <button onclick="run()">Run</button>
-  <div class="desc">Continuously moves the agent automatically according to its reward and perceived goal calculations.</div>
+  <label class="tooltip">
+    <button onclick="run()">Run</button>
+    <span class="tooltiptext">Continuously moves the agent automatically according to its reward and perceived goal calculations.</span>
+  </label>
 
-  <button onclick="reset()">Reset</button>
-  <div class="desc">Resets the agent to the start position, clears temporary state, and redraws the grid.</div>
+  <label class="tooltip">
+    <button onclick="reset()">Reset</button>
+    <span class="tooltiptext">Resets the agent to the start, clears temporary state, and redraws the grid.</span>
+  </label>
 
   <p>Click on grid cells to add/remove gold tiles (reward tiles). Observe how high-reward tiles can lure the agent away from the true goal.</p>
   <p id="info"></p>
