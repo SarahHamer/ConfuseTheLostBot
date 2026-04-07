@@ -142,28 +142,6 @@
   <div class="canvas-container">
     <canvas id="grid" width="360" height="360"></canvas>
   </div>
-
-<div class="info-box">
-  <h3>Understanding the Attacks</h3>
-
-  <div class="info-item">
-    <strong>Golden Tile Reward (Reward Hacking)</strong>
-    <p><b>Impact:</b> The agent exploits high-reward shortcuts and ignores the true objective.</p>
-    <p><b>Mitigation:</b> Improve reward design, add constraints, and audit behavior.</p>
-  </div>
-
-  <div class="info-item">
-    <strong>Fake Goal (Observation Manipulation)</strong>
-    <p><b>Impact:</b> The agent follows incorrect or manipulated inputs.</p>
-    <p><b>Mitigation:</b> Validate inputs, use redundancy, and train for robustness.</p>
-  </div>
-
-  <div class="info-item">
-    <strong>Noise (Observation Perturbation)</strong>
-    <p><b>Impact:</b> Causes instability and unpredictable behavior.</p>
-    <p><b>Mitigation:</b> Train with noise, filter inputs, and use robust policies.</p>
-  </div>
-</div>
   
   <div class="panel">
     <h3>Controls</h3>
@@ -224,6 +202,28 @@
     </div>
 
     <p id="info"></p>
+  </div>
+</div>
+
+<div class="info-box">
+  <h3>Understanding the Attacks</h3>
+
+  <div class="info-item">
+    <strong>Golden Tile Reward (Reward Hacking)</strong>
+    <p><b>Impact:</b> The agent exploits high-reward shortcuts and ignores the true objective.</p>
+    <p><b>Mitigation:</b> Improve reward design, add constraints, and audit behavior.</p>
+  </div>
+
+  <div class="info-item">
+    <strong>Fake Goal (Observation Manipulation)</strong>
+    <p><b>Impact:</b> The agent follows incorrect or manipulated inputs.</p>
+    <p><b>Mitigation:</b> Validate inputs, use redundancy, and train for robustness.</p>
+  </div>
+
+  <div class="info-item">
+    <strong>Noise (Observation Perturbation)</strong>
+    <p><b>Impact:</b> Causes instability and unpredictable behavior.</p>
+    <p><b>Mitigation:</b> Train with noise, filter inputs, and use robust policies.</p>
   </div>
 </div>
 
