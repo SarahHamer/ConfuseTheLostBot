@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RL Attack Demo – Noise & Observation Manipulation</title>
+<title>RL Attack Demo – Noise & Reward-Hacking</title>
 <style>
   body { font-family: Arial; display: flex; gap: 20px; }
   canvas { border: 1px solid black; cursor: pointer; }
@@ -41,7 +41,7 @@
   <button onclick="run()">Run</button>
   <button onclick="reset()">Reset</button>
 
-  <p>Click on grid cells to add/remove gold tiles (reward tiles)</p>
+  <p>Click grid cells to add/remove gold tiles (reward tiles)</p>
   <p id="info"></p>
 </div>
 
@@ -52,6 +52,7 @@ const cell = 60;
 let agent, goal, rewardTiles;
 let running = false;
 let lastPos = null;
+let priorityTile = null;
 
 // UI refs
 const goalRewardInput = document.getElementById("goalReward");
@@ -66,7 +67,8 @@ function reset() {
   rewardTiles = [{x: 2, y: 2}];
   running = false;
   lastPos = null;
-  draw();
+  priorityTile = null;
+  draw(goal); // initial perceived goal = true goal
 }
 
 // Sample perceived goal **once per step**
@@ -81,7 +83,7 @@ function getPerceivedGoal() {
   return perceivedGoal;
 }
 
-// Reward calculation uses **passed perceivedGoal**
+// Reward calculation uses passed perceivedGoal
 function reward(x, y, perceivedGoal) {
   let r = parseFloat(stepPenaltyInput.value);
   if (x === perceivedGoal.x && y === perceivedGoal.y) r += parseFloat(goalRewardInput.value);
@@ -137,6 +139,7 @@ function bestMove(perceivedGoal) {
     }
   }
 
+  priorityTile = best ? {...best} : null;
   lastPos = {...agent};
   return best;
 }
@@ -146,7 +149,7 @@ function step() {
   const onTrueGoal = agent.x === goal.x && agent.y === goal.y;
   const rewardTileHere = rewardTiles.some(t => t.x === agent.x && t.y === agent.y);
 
-  // Stay on true goal if no reward tile and no fake goal
+  // stay at true goal if no reward tile and no fake goal
   if (onTrueGoal && !rewardTileHere && !fakeGoalInput.checked) {
     draw(perceivedGoal);
     return;
@@ -195,6 +198,13 @@ function draw(perceivedGoal) {
   ctx.lineWidth = 3;
   ctx.strokeRect(perceivedGoal.x*cell+5, perceivedGoal.y*cell+5, 50, 50);
 
+  // priority tile visual
+  if (priorityTile) {
+    ctx.strokeStyle = "orange";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(priorityTile.x*cell+5, priorityTile.y*cell+5, 50, 50);
+  }
+
   // agent
   ctx.fillStyle = "red";
   ctx.beginPath();
@@ -202,7 +212,7 @@ function draw(perceivedGoal) {
   ctx.fill();
 
   document.getElementById("info").innerText =
-    `Agent: (${agent.x}, ${agent.y}) Perceived Goal: (${perceivedGoal.x}, ${perceivedGoal.y})`;
+    `Agent: (${agent.x}, ${agent.y}) | Perceived Goal: (${perceivedGoal.x}, ${perceivedGoal.y}) | Priority: ${priorityTile ? `(${priorityTile.x}, ${priorityTile.y})` : 'None'}`;
 }
 
 // click to toggle reward tiles
