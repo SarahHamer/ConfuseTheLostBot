@@ -16,7 +16,8 @@
   /* Header */
   .header {
     margin-bottom: 20px;
-    max-width: 800px;
+    width: 100%;      /* stretch header */
+    max-width: none;
   }
   .header h1 {
     margin: 0 0 5px 0;
@@ -26,6 +27,8 @@
     margin: 0;
     font-size: 1em;
     color: #333;
+    width: 100%;        /* description stretches */
+    box-sizing: border-box;
   }
 
   /* Main container */
@@ -110,7 +113,7 @@
   <p>This interactive demo showcases two attack vectors for reinforcement learning agents: 
      <strong>reward hacking</strong> (gold tiles that can lure the agent away from its goal) 
      and <strong>adversarial observation manipulation</strong> (fake goals and noisy perceptions). 
-     Click on tiles to add/remove reward tiles, adjust sliders, and observe how the agent's path changes.</p>
+     Click on tiles to add/remove reward tiles, adjust sliders, and observe how the agent's path changes. The description box stretches dynamically with the page width.</p>
 </div>
 
 <!-- Main content: canvas + controls -->
