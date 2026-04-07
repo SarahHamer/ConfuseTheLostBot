@@ -4,43 +4,33 @@
 <meta charset="UTF-8">
 <title>RL Attack Demo – Stable Grid with Tooltips</title>
 <style>
-  body {
-    font-family: Arial;
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;  /* top-align canvas and panel */
-    justify-content: flex-start;
-    margin: 20px;
-  }
+body {
+  font-family: Arial;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100vw; /* full viewport width */
+  margin: 20px;
+}
 
-  .canvas-container {
-    width: 360px;
-    height: 360px;
-    flex-shrink: 0;  /* prevent shrinking */
-    flex-grow: 0;    /* prevent stretching */
-  }
+.canvas-container {
+  width: 360px;
+  height: 360px;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
 
-  canvas {
-    border: 1px solid black;
-    cursor: pointer;
-    display: block;
-  }
+.panel {
+  flex-grow: 1;           /* stretch horizontally */
+  max-width: none;        /* remove previous limit */
+  overflow-y: auto;
+}
 
-  .panel {
-    max-width: 300px;
-    overflow-y: auto;  /* allow scrolling if content grows */
-  }
-
-  label {
-    display: block;
-    margin-top: 10px;
-    position: relative;
-  }
-
-  input, button {
-    width: 100%;
-    margin-top: 5px;
-  }
+input, button {
+  width: 100%;           /* fill panel width */
+  margin-top: 5px;
+}
 
   /* Tooltip container */
   .tooltip {
