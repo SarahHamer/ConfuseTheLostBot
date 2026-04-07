@@ -2,13 +2,45 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RL Attack Demo – Hover Tooltips</title>
+<title>RL Attack Demo – Stable Grid with Tooltips</title>
 <style>
-  body { font-family: Arial; display: flex; gap: 20px; }
-  canvas { border: 1px solid black; cursor: pointer; }
-  .panel { max-width: 300px; }
-  label { display: block; margin-top: 10px; position: relative; }
-  input, button { width: 100%; margin-top: 5px; }
+  body {
+    font-family: Arial;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;  /* top-align canvas and panel */
+    justify-content: flex-start;
+    margin: 20px;
+  }
+
+  .canvas-container {
+    width: 360px;
+    height: 360px;
+    flex-shrink: 0;  /* prevent shrinking */
+    flex-grow: 0;    /* prevent stretching */
+  }
+
+  canvas {
+    border: 1px solid black;
+    cursor: pointer;
+    display: block;
+  }
+
+  .panel {
+    max-width: 300px;
+    overflow-y: auto;  /* allow scrolling if content grows */
+  }
+
+  label {
+    display: block;
+    margin-top: 10px;
+    position: relative;
+  }
+
+  input, button {
+    width: 100%;
+    margin-top: 5px;
+  }
 
   /* Tooltip container */
   .tooltip {
@@ -41,11 +73,18 @@
     visibility: visible;
     opacity: 1;
   }
+
+  p {
+    margin-top: 15px;
+    font-size: 0.9em;
+  }
 </style>
 </head>
 <body>
 
-<canvas id="grid" width="360" height="360"></canvas>
+<div class="canvas-container">
+  <canvas id="grid" width="360" height="360"></canvas>
+</div>
 
 <div class="panel">
   <h3>Controls</h3>
@@ -102,7 +141,7 @@ let agent, goal, rewardTiles;
 let running = false;
 let lastPos = null;
 let priorityTile = null;
-let trail = []; // store past positions for fading trail
+let trail = [];
 const TRAIL_LENGTH = 15;
 
 // UI refs
@@ -123,7 +162,6 @@ function reset() {
   draw(goal);
 }
 
-// Sample perceived goal once per step
 function getPerceivedGoal() {
   let perceivedGoal = fakeGoalInput.checked ? {x:0, y:5} : {...goal};
   if (Math.random() < noiseInput.value) {
@@ -135,7 +173,6 @@ function getPerceivedGoal() {
   return perceivedGoal;
 }
 
-// Reward calculation
 function reward(x, y, perceivedGoal) {
   let r = parseFloat(stepPenaltyInput.value);
   if (x === perceivedGoal.x && y === perceivedGoal.y) r += parseFloat(goalRewardInput.value);
@@ -145,7 +182,6 @@ function reward(x, y, perceivedGoal) {
   return r;
 }
 
-// Recursive evaluation
 function evaluate(x, y, depth, perceivedGoal, visited=new Set()) {
   if (depth === 0) return 0;
   const moves = [
@@ -209,7 +245,6 @@ function step() {
   const move = bestMove(perceivedGoal);
   if (move) agent = move;
 
-  // add to trail
   trail.push({...agent});
   if (trail.length > TRAIL_LENGTH) trail.shift();
 
@@ -238,10 +273,10 @@ function draw(perceivedGoal) {
     }
   }
 
-  // trail (fading)
+  // trail
   for (let i = 0; i < trail.length; i++) {
     const pos = trail[i];
-    const alpha = (i + 1)/trail.length * 0.5; // fade from 0 to 0.5
+    const alpha = (i + 1)/trail.length * 0.5;
     ctx.fillStyle = `rgba(255,0,0,${alpha})`;
     ctx.beginPath();
     ctx.arc(pos.x*cell+30, pos.y*cell+30, 10, 0, 2*Math.PI);
@@ -258,12 +293,12 @@ function draw(perceivedGoal) {
     ctx.fillRect(t.x*cell+15, t.y*cell+15, 30, 30);
   }
 
-  // perceived goal visual
+  // perceived goal
   ctx.strokeStyle = "blue";
   ctx.lineWidth = 3;
   ctx.strokeRect(perceivedGoal.x*cell+5, perceivedGoal.y*cell+5, 50, 50);
 
-  // priority tile visual
+  // priority tile
   if (priorityTile) {
     ctx.strokeStyle = "orange";
     ctx.lineWidth = 3;
