@@ -106,7 +106,7 @@ function reward(x, y) {
 }
 
 // Recursive evaluation with lookahead
-function evaluate(x, y, depth, visited=new Set()) {
+function evaluate(x, y, depth, visited=new Set(), obsGoal) {
   if (depth === 0) return 0;
 
   const moves = [
@@ -116,7 +116,6 @@ function evaluate(x, y, depth, visited=new Set()) {
     {dx:0, dy:-1}
   ];
 
-  const obsGoal = getObservation();
   let best = -Infinity;
 
   for (let m of moves) {
@@ -131,8 +130,8 @@ function evaluate(x, y, depth, visited=new Set()) {
     let newVisited = new Set(visited);
     newVisited.add(key);
 
-    // Dynamic reward-hacking
-    let score = reward(nx, ny) + evaluate(nx, ny, depth - 1, newVisited);
+    // Dynamic reward-hacking: reward dominates when high
+    let score = reward(nx, ny) + evaluate(nx, ny, depth - 1, newVisited, obsGoal);
 
     if (score > best) best = score;
   }
@@ -140,7 +139,7 @@ function evaluate(x, y, depth, visited=new Set()) {
   return best;
 }
 
-function bestMove() {
+function bestMove(obsGoal) {
   const moves = [
     {dx:1, dy:0},
     {dx:-1, dy:0},
@@ -160,7 +159,7 @@ function bestMove() {
     // prevent immediate backtracking
     if (lastPos && nx === lastPos.x && ny === lastPos.y) continue;
 
-    let score = evaluate(nx, ny, 4);
+    let score = evaluate(nx, ny, 4, new Set(), obsGoal);
 
     if (score > bestScore) {
       bestScore = score;
@@ -173,19 +172,20 @@ function bestMove() {
 }
 
 function step() {
-  const onGoal = agent.x === goal.x && agent.y === goal.y;
+  const obsGoal = getObservation(); // perceived goal
+  const onTrueGoal = agent.x === goal.x && agent.y === goal.y;
   const rewardTileHere = rewardTiles.some(t => t.x === agent.x && t.y === agent.y);
 
   // Standard behavior: stay on goal unless reward tiles or fake goal present
-  if (onGoal && !rewardTileHere && !fakeGoalInput.checked) {
+  if (onTrueGoal && !rewardTileHere && !fakeGoalInput.checked) {
     draw();
     return;
   }
 
-  let move = bestMove();
+  let move = bestMove(obsGoal);
   if (move) agent = move;
 
-  if (!goalReached && agent.x === goal.x && agent.y === goal.y) {
+  if (!goalReached && onTrueGoal) {
     goalReached = true;
   }
 
