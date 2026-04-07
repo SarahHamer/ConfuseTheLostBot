@@ -11,12 +11,7 @@ The demo visualizes how an RL agent’s behavior changes under these conditions.
 ---
 
 ## How to Run the Demo
-1. Download or clone this repository.
-2. Ensure the file `index.html` is present.
-3. Open `index.html` in any modern web browser  
-   *(or deploy via GitHub Pages for hosting)*.
-
-No server setup is required.
+Go to https://sarahhamer.github.io/ConfuseTheLostBot/ and have fun. No extra setup is required.
 
 ---
 
