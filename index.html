@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RL Attack Demo – Noise & Reward-Hacking</title>
+<title>RL Attack Demo – Noise, Reward-Hacking & Trail</title>
 <style>
   body { font-family: Arial; display: flex; gap: 20px; }
   canvas { border: 1px solid black; cursor: pointer; }
-  .panel { max-width: 250px; }
+  .panel { max-width: 300px; }
   label { display: block; margin-top: 10px; }
+  .desc { font-size: 0.85em; color: #555; margin-bottom: 5px; }
 </style>
 </head>
 <body>
@@ -15,33 +16,53 @@
 <canvas id="grid" width="360" height="360"></canvas>
 
 <div class="panel">
-  <h3>Controls</h3>
+  <h3>Controls & Explanations</h3>
 
   <label>Goal Reward: <span id="grv">10</span>
     <input type="range" id="goalReward" min="0" max="20" value="10">
   </label>
+  <div class="desc">
+    Reward for reaching the true goal (green tile). Higher value encourages the agent to prioritize the goal over other tiles.
+  </div>
 
   <label>Tile Reward: <span id="trv">2</span>
     <input type="range" id="tileReward" min="0" max="10" value="2">
   </label>
+  <div class="desc">
+    Reward for stepping on gold tiles. Demonstrates <b>reward hacking</b>—high rewards can lure the agent away from the true goal.
+  </div>
 
   <label>Step Penalty: <span id="spv">-0.1</span>
     <input type="range" id="stepPenalty" min="-1" max="0" step="0.05" value="-0.1">
   </label>
+  <div class="desc">
+    Small penalty per step. Encourages shorter paths; can influence whether the agent loops or moves efficiently.
+  </div>
 
   <label>
     <input type="checkbox" id="fakeGoal"> Fake Goal (Observation Attack)
   </label>
+  <div class="desc">
+    Introduces a false goal (blue outline). Demonstrates <b>adversarial observation manipulation</b>—the agent will move toward a location it believes is the goal.
+  </div>
 
   <label>Noise: <span id="nv">0</span>
     <input type="range" id="noise" min="0" max="0.5" step="0.05" value="0">
   </label>
+  <div class="desc">
+    Randomly perturbs the agent's perceived goal. Higher noise increases unpredictability, simulating imperfect or adversarial observations.
+  </div>
 
   <button onclick="step()">Step</button>
-  <button onclick="run()">Run</button>
-  <button onclick="reset()">Reset</button>
+  <div class="desc">Advances the agent by one step toward its current prioritized tile.</div>
 
-  <p>Click grid cells to add/remove gold tiles (reward tiles)</p>
+  <button onclick="run()">Run</button>
+  <div class="desc">Continuously moves the agent automatically according to its reward and perceived goal calculations.</div>
+
+  <button onclick="reset()">Reset</button>
+  <div class="desc">Resets the agent to the start position, clears temporary state, and redraws the grid.</div>
+
+  <p>Click on grid cells to add/remove gold tiles (reward tiles). Observe how high-reward tiles can lure the agent away from the true goal.</p>
   <p id="info"></p>
 </div>
 
@@ -53,6 +74,8 @@ let agent, goal, rewardTiles;
 let running = false;
 let lastPos = null;
 let priorityTile = null;
+let trail = []; // store past positions for fading trail
+const TRAIL_LENGTH = 15;
 
 // UI refs
 const goalRewardInput = document.getElementById("goalReward");
@@ -68,10 +91,11 @@ function reset() {
   running = false;
   lastPos = null;
   priorityTile = null;
-  draw(goal); // initial perceived goal = true goal
+  trail = [];
+  draw(goal);
 }
 
-// Sample perceived goal **once per step**
+// Sample perceived goal once per step
 function getPerceivedGoal() {
   let perceivedGoal = fakeGoalInput.checked ? {x:0, y:5} : {...goal};
   if (Math.random() < noiseInput.value) {
@@ -83,7 +107,7 @@ function getPerceivedGoal() {
   return perceivedGoal;
 }
 
-// Reward calculation uses passed perceivedGoal
+// Reward calculation
 function reward(x, y, perceivedGoal) {
   let r = parseFloat(stepPenaltyInput.value);
   if (x === perceivedGoal.x && y === perceivedGoal.y) r += parseFloat(goalRewardInput.value);
@@ -149,7 +173,6 @@ function step() {
   const onTrueGoal = agent.x === goal.x && agent.y === goal.y;
   const rewardTileHere = rewardTiles.some(t => t.x === agent.x && t.y === agent.y);
 
-  // stay at true goal if no reward tile and no fake goal
   if (onTrueGoal && !rewardTileHere && !fakeGoalInput.checked) {
     draw(perceivedGoal);
     return;
@@ -157,6 +180,10 @@ function step() {
 
   const move = bestMove(perceivedGoal);
   if (move) agent = move;
+
+  // add to trail
+  trail.push({...agent});
+  if (trail.length > TRAIL_LENGTH) trail.shift();
 
   draw(perceivedGoal);
 }
@@ -181,6 +208,16 @@ function draw(perceivedGoal) {
     for (let j = 0; j < size; j++) {
       ctx.strokeRect(i*cell, j*cell, cell, cell);
     }
+  }
+
+  // trail (fading)
+  for (let i = 0; i < trail.length; i++) {
+    const pos = trail[i];
+    const alpha = (i + 1)/trail.length * 0.5; // fade from 0 to 0.5
+    ctx.fillStyle = `rgba(255,0,0,${alpha})`;
+    ctx.beginPath();
+    ctx.arc(pos.x*cell+30, pos.y*cell+30, 10, 0, 2*Math.PI);
+    ctx.fill();
   }
 
   // true goal
