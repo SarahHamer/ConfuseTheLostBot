@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RL Attack Demo – Full Fixed Version</title>
+<title>Confuse the Lost Bot</title>
 <style>
   body {
     font-family: Arial;
@@ -57,7 +57,7 @@
     flex-grow: 1;
     max-width: none;
     overflow-y: auto;
-    padding-left: 15px; /* buffer so text is not cut off */
+    padding-left: 30px; /* buffer so text is not cut off */
   }
 
   label, .panel p {
@@ -109,11 +109,12 @@
 
 <!-- Header / Description -->
 <div class="header">
-  <h1>Reinforcement Learning Attack Demo</h1>
-  <p>This interactive demo showcases two attack vectors for reinforcement learning agents: 
+  <h1>Confuse the Lost Bot! A Reinforcement Learning Attack Demo</h1>
+  <p>Welcome to Confuse the Lost Bot, a demo on reinforcement learning (RL) and its attack vectors for the Secure and Trustworthy AI Systems course. In this demo, we have a reinforcement learning powered bot agent that tries to get to its goal tile. But by tweaking the controls it might be led astray. Try out different variations to understand how adversarial manipulation can influence RL behavior.
+    This interactive demo showcases two attack vectors for reinforcement learning agents: 
      <strong>reward hacking</strong> (gold tiles that can lure the agent away from its goal) 
      and <strong>adversarial observation manipulation</strong> (fake goals and noisy perceptions). 
-     Click on tiles to add/remove reward tiles, adjust sliders, and observe how the agent's path changes. The description box stretches dynamically with the page width.</p>
+     Click on tiles to add/remove reward tiles, adjust sliders, and observe how the agent's path changes.</p>
 </div>
 
 <!-- Main content: canvas + controls -->
