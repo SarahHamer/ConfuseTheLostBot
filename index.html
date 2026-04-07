@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RL Attack Demo – Fixed Width Controls</title>
+<title>RL Attack Demo – Fixed Width Controls with Buffer</title>
 <style>
   body {
     font-family: Arial;
@@ -31,6 +31,7 @@
     flex-grow: 1;
     max-width: none;
     overflow-y: auto;
+    padding-left: 15px; /* Added buffer so text is not cut off */
   }
 
   label, .panel p {
