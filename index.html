@@ -52,7 +52,7 @@ const cell = 60;
 let agent, goal, rewardTiles;
 let running = false;
 let lastPos = null; // prevent ping-pong
-let goalReached = false; // tracks if agent reached goal
+let goalReached = false;
 
 // UI refs
 const goalRewardInput = document.getElementById("goalReward");
@@ -78,7 +78,6 @@ function getObservation() {
     obsGoal = {x: 0, y: 5}; // fake location
   }
 
-  // noise
   if (Math.random() < noiseInput.value) {
     obsGoal = {
       x: Math.floor(Math.random() * size),
@@ -92,21 +91,17 @@ function getObservation() {
 function reward(x, y) {
   let r = parseFloat(stepPenaltyInput.value);
 
-  if (x === goal.x && y === goal.y) {
-    r += parseFloat(goalRewardInput.value);
-  }
+  if (x === goal.x && y === goal.y) r += parseFloat(goalRewardInput.value);
 
   for (let t of rewardTiles) {
-    if (x === t.x && y === t.y) {
-      r += parseFloat(tileRewardInput.value);
-    }
+    if (x === t.x && y === t.y) r += parseFloat(tileRewardInput.value);
   }
 
   return r;
 }
 
-// Recursive evaluation with lookahead
-function evaluate(x, y, depth, visited=new Set(), obsGoal) {
+// Recursive evaluation
+function evaluate(x, y, depth, visited=new Set()) {
   if (depth === 0) return 0;
 
   const moves = [
@@ -117,23 +112,21 @@ function evaluate(x, y, depth, visited=new Set(), obsGoal) {
   ];
 
   let best = -Infinity;
+  const obsGoal = getObservation();
 
   for (let m of moves) {
-    let nx = x + m.dx;
-    let ny = y + m.dy;
-
+    const nx = x + m.dx;
+    const ny = y + m.dy;
     if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
 
     const key = `${nx},${ny}`;
-    if (visited.has(key)) continue; // prevent cycles in lookahead
+    if (visited.has(key)) continue;
 
-    let newVisited = new Set(visited);
+    const newVisited = new Set(visited);
     newVisited.add(key);
 
-    // Dynamic reward-hacking: reward dominates when high
-    let score = reward(nx, ny) + evaluate(nx, ny, depth - 1, newVisited, obsGoal);
-
-    if (score > best) best = score;
+    let score = reward(nx, ny) + evaluate(nx, ny, depth - 1, newVisited);
+    best = Math.max(best, score);
   }
 
   return best;
@@ -151,16 +144,14 @@ function bestMove(obsGoal) {
   let bestScore = -Infinity;
 
   for (let m of moves) {
-    let nx = agent.x + m.dx;
-    let ny = agent.y + m.dy;
-
+    const nx = agent.x + m.dx;
+    const ny = agent.y + m.dy;
     if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
 
     // prevent immediate backtracking
     if (lastPos && nx === lastPos.x && ny === lastPos.y) continue;
 
-    let score = evaluate(nx, ny, 4, new Set(), obsGoal);
-
+    const score = evaluate(nx, ny, 4);
     if (score > bestScore) {
       bestScore = score;
       best = {x: nx, y: ny};
@@ -172,11 +163,11 @@ function bestMove(obsGoal) {
 }
 
 function step() {
-  const obsGoal = getObservation(); // perceived goal
+  const obsGoal = getObservation();
   const onTrueGoal = agent.x === goal.x && agent.y === goal.y;
   const rewardTileHere = rewardTiles.some(t => t.x === agent.x && t.y === agent.y);
 
-  // Standard behavior: stay on goal unless reward tiles or fake goal present
+  // stay on true goal unless reward tile or fake goal present
   if (onTrueGoal && !rewardTileHere && !fakeGoalInput.checked) {
     draw();
     return;
@@ -185,9 +176,7 @@ function step() {
   let move = bestMove(obsGoal);
   if (move) agent = move;
 
-  if (!goalReached && onTrueGoal) {
-    goalReached = true;
-  }
+  if (!goalReached && onTrueGoal) goalReached = true;
 
   draw();
 }
@@ -214,17 +203,17 @@ function draw() {
     }
   }
 
-  // goal (true)
+  // goal
   ctx.fillStyle = "green";
   ctx.fillRect(goal.x*cell+10, goal.y*cell+10, 40, 40);
 
   // reward tiles
   ctx.fillStyle = "gold";
-  for (let t of rewardTiles) {
+  for (const t of rewardTiles) {
     ctx.fillRect(t.x*cell+15, t.y*cell+15, 30, 30);
   }
 
-  // fake goal (visual hint)
+  // fake goal visual
   if (fakeGoalInput.checked) {
     ctx.strokeStyle = "blue";
     ctx.lineWidth = 3;
@@ -234,26 +223,21 @@ function draw() {
   // agent
   ctx.fillStyle = "red";
   ctx.beginPath();
-  ctx.arc(agent.x*cell+30, agent.y*cell+30, 15, 0, Math.PI*2);
+  ctx.arc(agent.x*cell+30, agent.y*cell+30, 15, 0, 2*Math.PI);
   ctx.fill();
 
-  document.getElementById("info").innerText =
-    `Agent: (${agent.x}, ${agent.y})`;
+  document.getElementById("info").innerText = `Agent: (${agent.x}, ${agent.y})`;
 }
 
-// Click-to-place reward tiles
+// click to toggle reward tiles
 document.getElementById("grid").addEventListener("click", e => {
   const rect = e.target.getBoundingClientRect();
   const x = Math.floor((e.clientX - rect.left)/cell);
   const y = Math.floor((e.clientY - rect.top)/cell);
 
-  // toggle tile
   const index = rewardTiles.findIndex(t => t.x === x && t.y === y);
-  if (index >= 0) {
-    rewardTiles.splice(index, 1); // remove
-  } else {
-    rewardTiles.push({x, y}); // add
-  }
+  if (index >= 0) rewardTiles.splice(index, 1);
+  else rewardTiles.push({x, y});
 
   draw();
 });
