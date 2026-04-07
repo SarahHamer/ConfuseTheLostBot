@@ -71,27 +71,28 @@ function reset() {
   draw();
 }
 
-function getObservation() {
-  let obsGoal = {...goal};
-
+// Compute the goal that the agent *perceives*
+function getPerceivedGoal() {
+  let perceivedGoal = {...goal};
   if (fakeGoalInput.checked) {
-    obsGoal = {x: 0, y: 5}; // fake location
+    perceivedGoal = {x: 0, y: 5}; // fake location
   }
 
   if (Math.random() < noiseInput.value) {
-    obsGoal = {
+    perceivedGoal = {
       x: Math.floor(Math.random() * size),
       y: Math.floor(Math.random() * size)
     };
   }
-
-  return obsGoal;
+  return perceivedGoal;
 }
 
+// Reward calculation uses the perceived goal
 function reward(x, y) {
   let r = parseFloat(stepPenaltyInput.value);
+  const perceivedGoal = getPerceivedGoal();
 
-  if (x === goal.x && y === goal.y) r += parseFloat(goalRewardInput.value);
+  if (x === perceivedGoal.x && y === perceivedGoal.y) r += parseFloat(goalRewardInput.value);
 
   for (let t of rewardTiles) {
     if (x === t.x && y === t.y) r += parseFloat(tileRewardInput.value);
@@ -112,7 +113,6 @@ function evaluate(x, y, depth, visited=new Set()) {
   ];
 
   let best = -Infinity;
-  const obsGoal = getObservation();
 
   for (let m of moves) {
     const nx = x + m.dx;
@@ -132,13 +132,15 @@ function evaluate(x, y, depth, visited=new Set()) {
   return best;
 }
 
-function bestMove(obsGoal) {
+function bestMove() {
   const moves = [
     {dx:1, dy:0},
     {dx:-1, dy:0},
     {dx:0, dy:1},
     {dx:0, dy:-1}
   ];
+
+  const perceivedGoal = getPerceivedGoal();
 
   let best = null;
   let bestScore = -Infinity;
@@ -151,7 +153,7 @@ function bestMove(obsGoal) {
     // prevent immediate backtracking
     if (lastPos && nx === lastPos.x && ny === lastPos.y) continue;
 
-    const score = evaluate(nx, ny, 4);
+    let score = evaluate(nx, ny, 4);
     if (score > bestScore) {
       bestScore = score;
       best = {x: nx, y: ny};
@@ -163,17 +165,16 @@ function bestMove(obsGoal) {
 }
 
 function step() {
-  const obsGoal = getObservation();
   const onTrueGoal = agent.x === goal.x && agent.y === goal.y;
   const rewardTileHere = rewardTiles.some(t => t.x === agent.x && t.y === agent.y);
 
-  // stay on true goal unless reward tile or fake goal present
+  // Stay on true goal if no reward tile and no fake goal
   if (onTrueGoal && !rewardTileHere && !fakeGoalInput.checked) {
     draw();
     return;
   }
 
-  let move = bestMove(obsGoal);
+  let move = bestMove();
   if (move) agent = move;
 
   if (!goalReached && onTrueGoal) goalReached = true;
@@ -203,7 +204,7 @@ function draw() {
     }
   }
 
-  // goal
+  // true goal
   ctx.fillStyle = "green";
   ctx.fillRect(goal.x*cell+10, goal.y*cell+10, 40, 40);
 
@@ -213,7 +214,7 @@ function draw() {
     ctx.fillRect(t.x*cell+15, t.y*cell+15, 30, 30);
   }
 
-  // fake goal visual
+  // fake goal hint
   if (fakeGoalInput.checked) {
     ctx.strokeStyle = "blue";
     ctx.lineWidth = 3;
